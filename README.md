@@ -16,33 +16,31 @@ npm run build    # → dist/
 
 | set | path | frames | size | used when |
 |---|---|---|---|---|
-| desktop | `frames/f001–f300.webp` | 300 × 1920×1080 | 29 MB | landscape / ≥ 820 px wide |
-| mobile | `frames/m/f001–f150.webp` | 150 × 810×1080 (portrait centre crop) | 7 MB | portrait < 820 px |
-| preview | `frames/lo/` | 50 × 640×360 (every 6th) | 1.2 MB | both — loads first so the hero is never black |
+| desktop | `frames/f001–f460.webp` | 460 × 1280×720 | 35 MB | landscape / ≥ 820 px wide |
+| mobile | `frames/m/f001–f460.webp` | 460 × 810×1080 (portrait centre crop) | 23 MB | portrait < 820 px |
+| preview | `frames/lo/` | 46 × 640×360 (every 10th) | 1.2 MB | both — loads first so the hero is never black |
 
-Frames load coarse-to-fine, so the film is scrubbable within a second and sharpens as the rest arrives.
+Frames are cut at 10 fps from the 46 s source film and adjacent frames are crossfaded by the fractional scroll position, so motion reads as continuous. They load coarse-to-fine, so the film is scrubbable within a second and sharpens as the rest arrives.
 
 Chapter captions, nav, feature lists, specs and contact details all live in `src/data/content.js`. Specs and contact are placeholders.
 
 ## Regenerating frames
 
-From a 4K JPG sequence (e.g. an ezgif export) in the current directory:
+From the source video (`Real-Estate-Full.mp4`, 1280×720 @ 24 fps):
 
 ```sh
-# desktop — every frame, 1920 wide
-ls ezgif-frame-*.jpg | sort | awk '{printf "%s %03d\n",$0,NR}' | xargs -P 8 -n 2 sh -c \
-  'ffmpeg -v error -i "$0" -vf scale=1920:-2 -c:v libwebp -quality 80 -y public/frames/f$1.webp'
+# desktop — 10 fps at source resolution
+ffmpeg -i Real-Estate-Full.mp4 -vf fps=10 -c:v libwebp -quality 82 public/frames/f%03d.webp
 
-# mobile — every 2nd frame, 3:4 centre crop
-ls ezgif-frame-*.jpg | sort | awk 'NR%2==1{printf "%s %03d\n",$0,(NR+1)/2}' | xargs -P 8 -n 2 sh -c \
-  'ffmpeg -v error -i "$0" -vf "crop=ih*3/4:ih:(iw-ih*3/4)/2:0,scale=810:1080" -c:v libwebp -quality 78 -y public/frames/m/f$1.webp'
+# mobile — 10 fps, 3:4 centre crop, upscaled to 810x1080
+ffmpeg -i Real-Estate-Full.mp4 -vf "fps=10,crop=ih*3/4:ih:(iw-ih*3/4)/2:0,scale=810:1080:flags=lanczos" -c:v libwebp -quality 80 public/frames/m/f%03d.webp
 
-# preview — every 6th frame, 640 wide (keep source numbering: f001, f007, …)
-ls ezgif-frame-*.jpg | sort | awk 'NR%6==1{printf "%s %03d\n",$0,NR}' | xargs -P 8 -n 2 sh -c \
-  'ffmpeg -v error -i "$0" -vf scale=640:-2 -c:v libwebp -quality 70 -y public/frames/lo/f$1.webp'
+# preview — every 10th of the 10 fps cut, 640 wide, keeping the desktop numbering (f001, f011, …)
+ffmpeg -i Real-Estate-Full.mp4 -vf "fps=10,scale=640:-2" -c:v libwebp -quality 70 /tmp/lo/f%03d.webp
+# then keep only f001, f011, f021 … in public/frames/lo/
 ```
 
-If the frame counts change, update `SRC_TOTAL` and `pickSet()` in `useScrollFilm.js`.
+If the frame count or fps changes, update `SRC_TOTAL`, `LO_STEP` and `pickSet()` in `useScrollFilm.js`.
 
 ## Deploy
 
