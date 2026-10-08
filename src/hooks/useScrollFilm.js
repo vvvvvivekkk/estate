@@ -51,13 +51,27 @@ export function useScrollFilm({ ease = 0.14, reduced = false } = {}) {
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
 
-    function drawImg(im, key) {
+    function place(im) {
       const cw = canvas.width, ch = canvas.height
       const iw = im.naturalWidth || 1920, ih = im.naturalHeight || 1080
       const s = Math.max(cw / iw, ch / ih)
       const dw = iw * s, dh = ih * s
-      ctx.drawImage(im, (cw - dw) / 2, (ch - dh) / 2, dw, dh)
+      return [(cw - dw) / 2, (ch - dh) / 2, dw, dh]
+    }
+    function drawImg(im, key) {
+      ctx.globalAlpha = 1
+      ctx.drawImage(im, ...place(im))
       lastKey = key
+    }
+    /* Crossfade: when both neighbours of the fractional position are loaded, blend them
+       so motion reads as continuous instead of stepping frame to frame. */
+    function drawBlend(a, b, t) {
+      ctx.globalAlpha = 1
+      ctx.drawImage(imgs[a], ...place(imgs[a]))
+      ctx.globalAlpha = t
+      ctx.drawImage(imgs[b], ...place(imgs[b]))
+      ctx.globalAlpha = 1
+      lastKey = 'b' + a + ':' + Math.round(t * 64)
     }
 
     function nearestLo(i) {
@@ -85,8 +99,15 @@ export function useScrollFilm({ ease = 0.14, reduced = false } = {}) {
       return null
     }
 
+    let currentPos = 0 // fractional frame
     function drawLatest() {
       if (!alive) return
+      const a = Math.floor(currentPos), t = currentPos - a, b2 = Math.min(FRAMES - 1, a + 1)
+      if (t > 0.02 && t < 0.98 && hiFlags[a] && hiFlags[b2]) {
+        const key = 'b' + a + ':' + Math.round(t * 64)
+        if (key !== lastKey) drawBlend(a, b2, t)
+        return
+      }
       const b = best(currentFrame)
       if (b && b.key !== lastKey) drawImg(b.im, b.key)
     }
@@ -159,8 +180,9 @@ export function useScrollFilm({ ease = 0.14, reduced = false } = {}) {
       target = scrollProgress()
       current += (target - current) * ease
       if (Math.abs(target - current) < 0.0005) current = target
-      const f = Math.round(current * (FRAMES - 1))
-      if (f !== currentFrame) { currentFrame = f; drawLatest() }
+      currentPos = current * (FRAMES - 1)
+      currentFrame = Math.round(currentPos)
+      drawLatest()
       setProgress(current)
       raf = requestAnimationFrame(tick)
     }
