@@ -1,9 +1,10 @@
 export const chapters = [
-  { from: 0.04, to: 0.22, num: 'I · The Villa',     title: 'Finished, lit, and facing the evening.',  body: 'Two storeys of glass and warm stone around a 14-metre pool. The garden is planted to screen every neighbour.' },
-  { from: 0.26, to: 0.40, num: 'II · Master Suite', title: 'Wake up to the water.',                   body: 'The principal bedroom opens straight onto the terrace, with the pool and skyline beyond the glass.' },
-  { from: 0.46, to: 0.60, num: 'III · Living',      title: 'One continuous room, open to the horizon.', body: 'Double-height living and dining under a timber soffit, sliding glass the full width of the terrace.' },
-  { from: 0.64, to: 0.80, num: 'IV · Private Wing', title: 'The quiet side of the house.',            body: 'Bedrooms and dressing rooms along a stone and oak corridor, set apart from the entertaining spaces.' },
-  { from: 0.84, to: 1.00, num: 'V · Lounge',        title: 'Evenings end here.',                      body: 'A sunken lounge looking back across the pool to the city lights.' },
+  { from: 0.02, to: 0.11, num: 'I · Ground',        title: 'The plot, before anything.',                  body: 'Open land on the edge of the city. The pool and basement are the first cuts into the earth.' },
+  { from: 0.13, to: 0.26, num: 'II · Structure',    title: 'Concrete, steel, and the first floor plate.', body: 'The frame goes up over fourteen months. Floor-to-ceiling openings are set into the structure from day one.' },
+  { from: 0.30, to: 0.46, num: 'III · The Villa',   title: 'Finished, lit, and facing the evening.',      body: 'Two storeys of glass and warm stone around a 14-metre pool. The garden is planted to screen every neighbour.' },
+  { from: 0.50, to: 0.64, num: 'IV · Living',       title: 'One continuous room, open to the horizon.',   body: 'Double-height living and dining under a timber soffit, sliding glass the full width of the terrace.' },
+  { from: 0.68, to: 0.86, num: 'V · Master Suite',  title: 'Wake up to the water.',                       body: 'The principal bedroom sits at the end of a stone and oak corridor, opening onto the terrace and the skyline.' },
+  { from: 0.89, to: 1.00, num: 'VI · Private Wing', title: 'The quiet side of the house.',                body: 'Bedrooms and dressing rooms set well apart from the entertaining spaces.' },
 ]
 
 export const nav = [
