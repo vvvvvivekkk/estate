@@ -1,0 +1,219 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>selfcheck</title></head>
+<body>
+<pre id="out">PENDING</pre>
+<script>
+/* Temporary self-check harness. Loads index.html in a same-origin iframe at each
+   required width, measures layout, and functionally exercises the scroll-scrub.
+   Deleted after the run. */
+
+const CASES = [
+  [320,568],[360,640],[390,844],[414,896],[768,1024],[834,1112],
+  [1024,768],[1280,800],[1440,900],[1920,1080],[2560,1440],
+  [740,360]   // short-and-wide landscape phone
+];
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function measure(win, doc) {
+  const vw = win.innerWidth, vh = win.innerHeight;
+  const r = { vw, vh };
+
+  r.docScrollW  = doc.documentElement.scrollWidth;
+  r.bodyScrollW = doc.body.scrollWidth;
+  r.docClientW  = doc.documentElement.clientWidth;
+  // true horizontal scrollability
+  r.hScrollable = doc.documentElement.scrollWidth > doc.documentElement.clientWidth + 1;
+
+  // Right edge + overflow offenders, split into REAL vs benign.
+  // Benign = position:fixed (never expands the document scroll area),
+  // visibility:hidden/display-less, or the offscreen-left skip-link pattern.
+  let maxRight = 0, widest = '', real = [], benign = [];
+  const all = doc.body.querySelectorAll('*');
+  all.forEach(el => {
+    const b = el.getBoundingClientRect();
+    if (b.width === 0 && b.height === 0) return;
+    const st = win.getComputedStyle(el);
+    const name = el.tagName + (el.className ? '.' + String(el.className).split(' ').join('.') : '');
+    const isFixed = st.position === 'fixed';
+    const hidden = st.visibility === 'hidden' || st.opacity === '0';
+    const offscreenLeft = b.right < 0;                  // skip-link parked at -9999px
+
+    // only in-flow, visible content should define the widest edge
+    if (!isFixed && !hidden && !offscreenLeft && b.right > maxRight) {
+      maxRight = b.right; widest = name;
+    }
+    if (b.right > vw + 1 || b.left < -1) {
+      const entry = name + ' [L' + Math.round(b.left) + ' R' + Math.round(b.right) + ']';
+      if (isFixed || hidden || offscreenLeft) benign.push(entry + (isFixed ? ' fixed' : '') + (hidden ? ' hidden' : ''));
+      else real.push(entry);
+    }
+  });
+  r.maxRight = Math.round(maxRight);
+  r.widest = widest;
+  r.offenders = real.slice(0, 6);
+  r.offenderCount = real.length;
+  r.benignCount = benign.length;
+  r.benign = benign.slice(0, 3);
+
+  // video covers viewport, object-fit cover, no letterboxing
+  const v = doc.getElementById('scrubVideo');
+  const vb = v.getBoundingClientRect();
+  const cs = win.getComputedStyle(v);
+  r.videoRect = Math.round(vb.width) + 'x' + Math.round(vb.height);
+  r.objectFit = cs.objectFit;
+  r.videoCovers = vb.width >= vw - 1 && vb.height >= vh - 1;
+
+  // CTA tappable + inside viewport
+  const cta = doc.querySelector('.hero-overlay .btn-primary');
+  const cb = cta.getBoundingClientRect();
+  r.ctaSize = Math.round(cb.width) + 'x' + Math.round(cb.height);
+  r.ctaTappable = cb.width >= 44 && cb.height >= 44;
+  r.ctaInView = cb.right <= vw + 1 && cb.left >= -1 && cb.bottom <= vh + 1 && cb.top >= -1;
+  r.ctaOpacity = win.getComputedStyle(doc.getElementById('heroOverlay')).opacity;
+
+  // body font size >= 16px
+  r.bodyFont = parseFloat(win.getComputedStyle(doc.body).fontSize);
+
+  // nav tap targets (toggle on mobile, links otherwise)
+  const tg = doc.getElementById('navToggle');
+  const tb = tg.getBoundingClientRect();
+  r.navToggleVisible = win.getComputedStyle(tg).display !== 'none';
+  r.navToggleSize = Math.round(tb.width) + 'x' + Math.round(tb.height);
+  let smallTap = [];
+  doc.querySelectorAll('.nav-links a, .btn').forEach(a => {
+    const ab = a.getBoundingClientRect();
+    if (ab.width === 0 && ab.height === 0) return;           // hidden offscreen menu
+    if (ab.height < 44 || ab.width < 44) smallTap.push((a.textContent || '').trim().slice(0, 18) + ' ' + Math.round(ab.width) + 'x' + Math.round(ab.height));
+  });
+  r.smallTapTargets = smallTap;
+
+  // clipped text: element clips its own content horizontally
+  let clipped = [];
+  all.forEach(el => {
+    const st = win.getComputedStyle(el);
+    if ((st.overflowX === 'hidden' || st.overflowX === 'clip') && el.scrollWidth > el.clientWidth + 1 && el.clientWidth > 0) {
+      if (el.tagName !== 'HTML' && el.tagName !== 'BODY') {
+        clipped.push(el.tagName + '.' + String(el.className).split(' ').join('.') + ' sw' + el.scrollWidth + '>cw' + el.clientWidth);
+      }
+    }
+  });
+  r.clippedText = clipped.slice(0, 5);
+
+  r.stageH = doc.getElementById('hero').offsetHeight;
+  return r;
+}
+
+async function scrubTest(win, doc, r) {
+  const v = doc.getElementById('scrubVideo');
+  // wait for metadata so the engine can enable
+  let waited = 0;
+  while (!(v.readyState >= 1 && isFinite(v.duration) && v.duration > 0) && waited < 8000) {
+    await sleep(100); waited += 100;
+  }
+  r.videoDuration = isFinite(v.duration) ? +v.duration.toFixed(2) : null;
+
+  // Diagnostics: can this browser actually decode/seek the file at all?
+  r.diag = {
+    readyState: v.readyState,
+    networkState: v.networkState,
+    error: v.error ? (v.error.code + ':' + (v.error.message || '')) : null,
+    seekableRanges: v.seekable.length,
+    seekable0: v.seekable.length ? [+v.seekable.start(0).toFixed(2), +v.seekable.end(0).toFixed(2)] : null,
+    bufferedRanges: v.buffered.length,
+    buffered0: v.buffered.length ? [+v.buffered.start(0).toFixed(2), +v.buffered.end(0).toFixed(2)] : null,
+    canPlayH264: v.canPlayType('video/mp4; codecs="avc1.42E01E"') || '(empty)',
+    canPlayMp4: v.canPlayType('video/mp4') || '(empty)',
+    videoWidth: v.videoWidth, videoHeight: v.videoHeight,
+    bodyReduced: doc.body.classList.contains('reduced')
+  };
+
+  // Direct seek probe, independent of the page's scroll engine:
+  // set currentTime by hand and see whether the media element honours it.
+  try {
+    v.currentTime = 10;
+    await sleep(1200);
+    r.diag.manualSeekTo10 = +v.currentTime.toFixed(2);
+    v.currentTime = 0;
+    await sleep(400);
+  } catch (e) { r.diag.manualSeekError = e.message; }
+
+  if (!r.videoDuration) { r.scrub = 'NO_METADATA'; return; }
+
+  const stage = doc.getElementById('hero');
+  const span = stage.offsetHeight - win.innerHeight;
+
+  // smooth scroll-behavior turns scrollTo into an animation that headless
+  // virtual time may not advance; force instant jumps for the measurement.
+  doc.documentElement.style.scrollBehavior = 'auto';
+
+  // Wait for the eased currentTime to actually stop moving (real network seek
+  // + decode), rather than guessing with a fixed sleep.
+  const settle = async () => {
+    let last = -1, stable = 0;
+    for (let i = 0; i < 160; i++) {          // up to ~8s real time
+      await sleep(50);
+      const now = v.currentTime;
+      if (Math.abs(now - last) < 0.01) { stable++; if (stable >= 8) return; }
+      else stable = 0;
+      last = now;
+    }
+  };
+  const goto = async (y) => {
+    win.scrollTo(0, y);
+    await settle();
+    return win.scrollY;   // prove the scroll actually took effect
+  };
+
+  const y0 = await goto(0);                        const t0 = v.currentTime;
+  const y50 = await goto(Math.round(span * 0.5));  const tMid = v.currentTime;
+  const y90 = await goto(Math.round(span * 0.9));  const tLate = v.currentTime;
+  const y25 = await goto(Math.round(span * 0.25)); const tBack = v.currentTime;
+  const yH = await goto(0);                        const tHome = v.currentTime;
+
+  r.scrollSpan = span;
+  r.scrollYs = { at0: y0, at50: y50, at90: y90, back25: y25, home: yH };
+  r.scrubTimes = { at0: +t0.toFixed(2), at50: +tMid.toFixed(2), at90: +tLate.toFixed(2), back25: +tBack.toFixed(2), home: +tHome.toFixed(2) };
+  r.scrubForward  = tMid > t0 + 0.2 && tLate > tMid + 0.2;
+  r.scrubBackward = tBack < tLate - 0.2 && tHome < tBack;
+  r.scrub = (r.scrubForward && r.scrubBackward) ? 'OK' : 'FAIL';
+
+  // overlay must fade out once scrubbing begins
+  await goto(Math.round(win.innerHeight * 0.8));
+  r.overlayFadedOpacity = win.getComputedStyle(doc.getElementById('heroOverlay')).opacity;
+  await goto(0);
+  r.overlayHomeOpacity = win.getComputedStyle(doc.getElementById('heroOverlay')).opacity;
+}
+
+async function run(w, h, doScrub) {
+  const f = document.createElement('iframe');
+  f.style.cssText = 'width:' + w + 'px;height:' + h + 'px;border:0;position:absolute;left:0;top:0;';
+  f.src = '/index.html';
+  document.body.appendChild(f);
+  await new Promise(res => { f.onload = res; setTimeout(res, 12000); });
+  await sleep(500);
+  let r;
+  try {
+    const win = f.contentWindow, doc = f.contentDocument;
+    r = measure(win, doc);
+    if (doScrub) await scrubTest(win, doc, r);
+  } catch (e) {
+    r = { vw: w, vh: h, ERROR: e.message };
+  }
+  f.remove();
+  return r;
+}
+
+(async () => {
+  const results = [];
+  for (const [w, h] of CASES) {
+    // functionally exercise the scrub on a representative desktop + the landscape case
+    const doScrub = (w === 1280 || w === 740 || w === 390);
+    results.push(await run(w, h, doScrub));
+  }
+  document.getElementById('out').textContent = 'RESULTS_JSON:' + JSON.stringify(results, null, 1);
+  document.title = 'DONE';
+  try { await fetch('/__result', { method: 'POST', body: JSON.stringify(results) }); } catch (e) {}
+})();
+</script>
+</body></html>

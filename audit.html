@@ -1,0 +1,44 @@
+<!doctype html><html><head><meta charset="utf-8"><title>audit</title>
+<style>body{font:16px monospace;background:#fff;color:#000;margin:12px} .pass{color:#070} .fail{color:#b00;font-weight:bold} td{padding:2px 10px;border-bottom:1px solid #ccc}</style>
+</head><body>
+<h2>Responsive overflow audit</h2>
+<table id="t"><thead><tr><td>WxH</td><td>docScrollW</td><td>viewportW</td><td>overflowX?</td><td>bodyScrollW</td></tr></thead><tbody></tbody></table>
+<div id="status">RUNNING</div>
+<script>
+const sizes=[[320,900],[360,900],[390,844],[414,896],[740,360],[768,1024],[834,1112],[1024,768],[1280,800],[1440,900],[1920,1080],[2560,1440]];
+const tb=document.querySelector('#t tbody');
+function load(w,h){
+  return new Promise(res=>{
+    const f=document.createElement('iframe');
+    f.style.width=w+'px'; f.style.height=h+'px'; f.style.border='0';
+    f.src='/index.html';
+    document.body.appendChild(f);
+    setTimeout(()=>{
+      let r={w,h};
+      try{
+        const d=f.contentDocument, win=f.contentWindow;
+        r.docSW=d.documentElement.scrollWidth;
+        r.vw=win.innerWidth;
+        r.bodySW=d.body.scrollWidth;
+        // widest offending element (if any)
+        let maxEl=0,tag='';
+        d.body.querySelectorAll('*').forEach(el=>{ const rr=el.getBoundingClientRect(); if(rr.right>maxEl){maxEl=rr.right;tag=el.tagName+'.'+(el.className||'');} });
+        r.maxRight=Math.round(maxEl); r.widest=tag;
+        r.overflow=(r.docSW > r.vw+1)||(r.bodySW > r.vw+1);
+      }catch(e){ r.err=e.message; }
+      f.remove(); res(r);
+    },900);
+  });
+}
+(async()=>{
+  for(const [w,h] of sizes){
+    const r=await load(w,h);
+    const tr=document.createElement('tr');
+    const of = r.err? 'ERR:'+r.err : (r.overflow?'<span class="fail">YES-OVERFLOW</span>':'<span class="pass">no</span>');
+    tr.innerHTML=`<td>${w}x${h}</td><td>${r.docSW||'-'}</td><td>${r.vw||'-'}</td><td>${of}</td><td>maxR ${r.maxRight||'-'}</td>`;
+    tb.appendChild(tr);
+  }
+  document.querySelector('#status').textContent='DONE';
+})();
+</script>
+</body></html>

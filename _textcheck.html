@@ -1,0 +1,66 @@
+<!doctype html>
+<html><head><meta charset="utf-8"></head><body>
+<pre id="out">PENDING</pre>
+<script>
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const SIZES = [[320,568],[360,640],[390,844],[414,896],[768,1024],[1280,800],[740,360]];
+
+function textRect(el) {
+  // real inked text extent, which can exceed the element's own box
+  const rg = document.createRange();
+  rg.selectNodeContents(el);
+  const r = rg.getBoundingClientRect();
+  rg.detach && rg.detach();
+  return r;
+}
+
+async function run(w, h) {
+  const f = document.createElement('iframe');
+  f.style.cssText = 'width:' + w + 'px;height:' + h + 'px;border:0;position:absolute;left:0;top:0;';
+  f.src = '/index.html';
+  document.body.appendChild(f);
+  await new Promise(res => { f.onload = res; setTimeout(res, 10000); });
+  await sleep(400);
+  const win = f.contentWindow, doc = f.contentDocument;
+  const out = { size: w + 'x' + h, items: [] };
+
+  const sel = ['.hero-title', '.hero-sub', '.hero-overlay .btn-primary', '.brand',
+               '.overview-statement', '.pull', '.viewing h2', '.feature-list h3', '.meta-grid dd'];
+  sel.forEach(s => {
+    doc.querySelectorAll(s).forEach((el, i) => {
+      if (i > 0) return;
+      const box = el.getBoundingClientRect();
+      const tr = textRect(el);
+      const cs = win.getComputedStyle(el);
+      const overflowsBox = tr.right > box.right + 0.5;
+      const overflowsView = tr.right > w + 0.5;
+      if (overflowsBox || overflowsView || el.scrollWidth > el.clientWidth + 1) {
+        out.items.push({
+          sel: s,
+          font: Math.round(parseFloat(cs.fontSize)),
+          box: [Math.round(box.left), Math.round(box.right), Math.round(box.width)],
+          text: [Math.round(tr.left), Math.round(tr.right), Math.round(tr.width)],
+          sw_cw: el.scrollWidth + '/' + el.clientWidth,
+          maxW: cs.maxWidth,
+          overflowsBox, overflowsView,
+          wrap: cs.overflowWrap + '/' + cs.wordBreak
+        });
+      }
+    });
+  });
+  // parent geometry for context
+  const ov = doc.querySelector('.hero-overlay');
+  const ocs = win.getComputedStyle(ov);
+  out.overlay = { w: Math.round(ov.getBoundingClientRect().width), padL: ocs.paddingLeft, padR: ocs.paddingRight };
+  f.remove();
+  return out;
+}
+
+(async () => {
+  const res = [];
+  for (const [w, h] of SIZES) res.push(await run(w, h));
+  document.getElementById('out').textContent = 'TEXT_JSON:' + JSON.stringify(res, null, 1);
+  try { await fetch('/__result', { method: 'POST', body: JSON.stringify(res) }); } catch (e) {}
+})();
+</script>
+</body></html>

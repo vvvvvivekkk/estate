@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#100f0d" />
+<title>Where Architecture Meets Living — A Private Residence</title>
+<meta name="description" content="A private residence designed around space, light, and extraordinary views. A cinematic architectural presentation." />
+<style>
+  /* ===========================================================
+     DESIGN TOKENS
+     Dark, warm-neutral, one accent (brass/gold). Fluid scale.
+     =========================================================== */
+  :root{
+    --bg:        #100f0d;   /* warm near-black           */
+    --bg-2:      #16140f;   /* slightly lifted panel     */
+    --ink:       #f1ebdf;   /* warm off-white (body)     */
+    --ink-soft:  #b7ad9b;   /* muted warm grey           */
+    --ink-faint: #7d7566;   /* faint labels              */
+    --line:      rgba(241,235,223,.12);
+    --accent:    #c9a66b;   /* brass / champagne gold    */
+    --accent-ink:#141210;   /* text on accent fills      */
+
+    /* Fluid spacing */
+    --gutter: clamp(1.25rem, 5vw, 5rem);
+    --section-y: clamp(5rem, 12vh, 11rem);
+
+    /* Fluid type scale */
+    --fs-display: clamp(2.6rem, 8.5vw, 8rem);
+    --fs-h2:      clamp(1.9rem, 4.6vw, 4rem);
+    --fs-h3:      clamp(1.3rem, 2.4vw, 2rem);
+    --fs-lead:    clamp(1.12rem, 1.9vw, 1.6rem);
+    --fs-body:    clamp(1rem, 1.15vw, 1.15rem);   /* >=16px */
+    --fs-label:   clamp(.72rem, 1vw, .82rem);
+
+    --serif: "Cambria", "Constantia", "Palatino Linotype", "Georgia", "Times New Roman", serif;
+    --sans:  system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+    --ease: cubic-bezier(.22,.61,.36,1);
+  }
+
+  *, *::before, *::after{ box-sizing: border-box; }
+
+  html{
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  html, body{
+    margin:0; padding:0;
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;        /* no horizontal scroll, any width */
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:var(--fs-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+
+  img, video{ display:block; max-width:100%; }
+
+  h1,h2,h3{ font-family:var(--serif); font-weight:600; line-height:1.04; letter-spacing:-.01em; margin:0; }
+  p{ margin:0; }
+
+  a{ color:inherit; }
+
+  ::selection{ background:var(--accent); color:var(--accent-ink); }
+
+  :focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:3px;
+    border-radius:2px;
+  }
+
+  .label{
+    font-family:var(--sans);
+    font-size:var(--fs-label);
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:var(--accent);
+    font-weight:600;
+  }
+
+  .skip-link{
+    position:absolute; left:-9999px; top:0; z-index:999;
+    background:var(--accent); color:var(--accent-ink);
+    padding:.75rem 1rem; border-radius:0 0 6px 0; font-weight:700;
+  }
+  .skip-link:focus{ left:0; }
+
+  /* ===========================================================
+     NAVIGATION — minimal, premium
+     =========================================================== */
+  .nav{
+    position:fixed; inset:0 0 auto 0; z-index:60;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:1rem;
+    padding:
+      calc(env(safe-area-inset-top, 0px) + clamp(1rem,2.2vh,1.6rem))
+      max(var(--gutter), env(safe-area-inset-right,0px))
+      clamp(1rem,2.2vh,1.6rem)
+      max(var(--gutter), env(safe-area-inset-left,0px));
+    transition:background .5s var(--ease), backdrop-filter .5s var(--ease), border-color .5s var(--ease);
+    border-bottom:1px solid transparent;
+  }
+  .nav.scrolled{
+    background:rgba(16,15,13,.72);
+    -webkit-backdrop-filter:saturate(140%) blur(14px);
+    backdrop-filter:saturate(140%) blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{
+    font-family:var(--serif);
+    font-size:clamp(1.05rem,1.6vw,1.3rem);
+    letter-spacing:.02em;
+    text-decoration:none;
+    display:inline-flex; align-items:center; gap:.6rem;
+    white-space:nowrap;
+  }
+  .brand .dot{ width:.5rem; height:.5rem; background:var(--accent); border-radius:50%; flex:none; }
+
+  .nav-links{
+    display:flex; align-items:center; gap:clamp(1.1rem,2.4vw,2.6rem);
+    list-style:none; margin:0; padding:0;
+  }
+  .nav-links a{
+    text-decoration:none;
+    font-size:.86rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--ink-soft);
+    position:relative;
+    padding:.5rem 0;
+    transition:color .35s var(--ease);
+    min-height:44px; display:inline-flex; align-items:center;
+  }
+  .nav-links a::after{
+    content:""; position:absolute; left:0; right:0; bottom:.15rem; height:1px;
+    background:var(--accent); transform:scaleX(0); transform-origin:left;
+    transition:transform .4s var(--ease);
+  }
+  .nav-links a:hover, .nav-links a:focus-visible{ color:var(--ink); }
+  .nav-links a:hover::after, .nav-links a:focus-visible::after{ transform:scaleX(1); }
+
+  /* Hamburger (mobile) */
+  .nav-toggle{
+    display:none;
+    width:44px; height:44px;
+    background:none; border:1px solid var(--line); border-radius:6px;
+    color:var(--ink); cursor:pointer;
+    align-items:center; justify-content:center;
+    flex:none;
+  }
+  .nav-toggle svg{ width:20px; height:20px; }
+  .nav-toggle .ic-close{ display:none; }
+  body.menu-open .nav-toggle .ic-open{ display:none; }
+  body.menu-open .nav-toggle .ic-close{ display:block; }
+
+  /* ===========================================================
+     SCRUB HERO
+     =========================================================== */
+  .scrub-stage{
+    position:relative;
+    /* Tall scroll spacer. The px floor keeps the scrub smooth on short
+       viewports: a pure vh height shrinks the scroll distance with the
+       viewport, compressing the film into too few pixels (<1px per frame).
+       On typical desktop/portrait heights the vh value wins, so pacing there
+       is unchanged. */
+    height:max(560vh, 3200px);
+  }
+  @supports (height:100svh){ .scrub-stage{ height:max(560svh, 3200px); } }
+
+  .scrub-pin{
+    position:sticky; top:0;
+    height:100vh;
+    height:100svh;
+    overflow:hidden;
+    background:#000;
+  }
+  .scrub-video{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;        /* always cover, every ratio */
+    object-position:center 42%;
+    background:#000;
+  }
+
+  /* Cinematic scrims + subtle vignette (never hides architecture up top) */
+  .scrub-pin::before{   /* bottom scrim for text legibility */
+    content:""; position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:linear-gradient(to top,
+      rgba(8,7,6,.82) 0%, rgba(8,7,6,.45) 22%, rgba(8,7,6,0) 48%);
+  }
+  .scrub-pin::after{   /* soft vignette */
+    content:""; position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:radial-gradient(130% 110% at 50% 38%,
+      rgba(0,0,0,0) 55%, rgba(0,0,0,.42) 100%);
+  }
+
+  .hero-overlay{
+    position:absolute; z-index:3;
+    left:0; right:0; bottom:0;
+    padding:
+      0
+      max(var(--gutter), env(safe-area-inset-right,0px))
+      calc(env(safe-area-inset-bottom,0px) + clamp(2.2rem, 7vh, 6rem))
+      max(var(--gutter), env(safe-area-inset-left,0px));
+    display:flex; flex-direction:column; align-items:flex-start; gap:clamp(1rem,2.4vh,1.6rem);
+    will-change:opacity, transform;
+  }
+  .hero-overlay .label{ margin:0; }
+  .hero-title{
+    font-size:var(--fs-display);
+    max-width:16ch;
+    text-wrap:balance;
+    text-shadow:0 2px 40px rgba(0,0,0,.45);
+  }
+  .hero-sub{
+    font-size:var(--fs-lead);
+    color:var(--ink);
+    max-width:46ch;
+    line-height:1.45;
+    text-shadow:0 1px 20px rgba(0,0,0,.5);
+  }
+
+  /* Buttons / CTA */
+  .btn{
+    --pad-y:clamp(.85rem,1.6vh,1.1rem);
+    --pad-x:clamp(1.4rem,3vw,2.2rem);
+    display:inline-flex; align-items:center; justify-content:center; gap:.7rem;
+    min-height:48px; min-width:44px;
+    padding:var(--pad-y) var(--pad-x);
+    font-family:var(--sans); font-size:.95rem; letter-spacing:.08em;
+    text-transform:uppercase; text-decoration:none; font-weight:600;
+    border-radius:2px; cursor:pointer;
+    transition:transform .3s var(--ease), background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease);
+  }
+  .btn-primary{
+    background:var(--accent); color:var(--accent-ink); border:1px solid var(--accent);
+  }
+  .btn-primary:hover, .btn-primary:focus-visible{ transform:translateY(-2px); background:#d8b981; border-color:#d8b981; }
+  .btn-ghost{
+    background:transparent; color:var(--ink); border:1px solid rgba(241,235,223,.4);
+  }
+  .btn-ghost:hover, .btn-ghost:focus-visible{ border-color:var(--accent); color:var(--accent); transform:translateY(-2px); }
+  .btn .arrow{ transition:transform .3s var(--ease); }
+  .btn:hover .arrow{ transform:translateX(4px); }
+
+  /* Scroll hint */
+  .scroll-hint{
+    position:absolute; z-index:3; left:50%; transform:translateX(-50%);
+    bottom:calc(env(safe-area-inset-bottom,0px) + 1.3rem);
+    display:flex; flex-direction:column; align-items:center; gap:.55rem;
+    font-size:.68rem; letter-spacing:.3em; text-transform:uppercase; color:var(--ink-soft);
+    will-change:opacity;
+  }
+  .scroll-hint .track{ width:1px; height:46px; background:linear-gradient(var(--accent), transparent); position:relative; overflow:hidden; }
+  .scroll-hint .track::after{ content:""; position:absolute; top:-40%; left:0; width:100%; height:40%; background:var(--accent); animation:drip 2.2s var(--ease) infinite; }
+  @keyframes drip{ 0%{ top:-40% } 70%,100%{ top:100% } }
+
+  /* ===========================================================
+     CONTENT SECTIONS
+     =========================================================== */
+  main{ position:relative; z-index:4; }
+
+  .content{
+    position:relative; z-index:4;
+    background:var(--bg);
+    border-top:1px solid var(--line);
+  }
+
+  .section{
+    padding-block:var(--section-y);
+    padding-inline:max(var(--gutter), env(safe-area-inset-left,0px)) max(var(--gutter), env(safe-area-inset-right,0px));
+    max-width:1500px; margin-inline:auto;
+    border-bottom:1px solid var(--line);
+  }
+  .section:last-of-type{ border-bottom:0; }
+
+  /* Two-column editorial grid: label/number aside + body.
+     Collapses to one column below 820px. */
+  .grid-2{
+    display:grid;
+    grid-template-columns:minmax(0, 0.9fr) minmax(0, 1.4fr);
+    gap:clamp(1.8rem, 5vw, 5rem);
+    align-items:start;
+  }
+  .aside-num{
+    font-family:var(--serif);
+    font-size:clamp(2.4rem,5vw,4.2rem);
+    color:var(--accent);
+    line-height:1; opacity:.9;
+  }
+  .aside-head{ margin-top:1rem; }
+
+  .section h2{ font-size:var(--fs-h2); max-width:18ch; text-wrap:balance; }
+  .lead{ font-size:var(--fs-lead); color:var(--ink); line-height:1.5; max-width:40ch; }
+  .body-copy{ color:var(--ink-soft); max-width:62ch; margin-top:clamp(1.1rem,2.5vh,1.8rem); }
+  .body-copy + .body-copy{ margin-top:1.1rem; }
+
+  .stack-gap{ display:flex; flex-direction:column; gap:clamp(1rem,2.6vh,1.8rem); }
+
+  /* Overview — large opening statement */
+  .overview-statement{
+    font-family:var(--serif);
+    font-size:var(--fs-h2);
+    line-height:1.18; letter-spacing:-.01em;
+    max-width:24ch; text-wrap:balance;
+  }
+  .overview-statement em{ color:var(--accent); font-style:italic; }
+
+  /* Feature list (Architecture / Living) */
+  .feature-list{
+    list-style:none; margin:clamp(1.4rem,3vh,2.2rem) 0 0; padding:0;
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+    gap:clamp(1.2rem,3vw,2.4rem);
+  }
+  .feature-list li{ border-top:1px solid var(--line); padding-top:1rem; }
+  .feature-list h3{ font-size:var(--fs-h3); margin-bottom:.4rem; }
+  .feature-list p{ color:var(--ink-soft); font-size:1rem; }
+
+  /* Pull quote */
+  .pull{
+    text-align:center;
+    max-width:24ch; margin-inline:auto;
+    font-family:var(--serif);
+    font-size:clamp(1.8rem,4.4vw,3.4rem);
+    line-height:1.22; letter-spacing:-.01em;
+    text-wrap:balance;
+  }
+  .pull em{ color:var(--accent); font-style:italic; }
+
+  /* Final CTA */
+  .viewing{
+    text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:clamp(1.4rem,3.4vh,2.4rem);
+  }
+  .viewing h2{ font-size:var(--fs-display); max-width:16ch; }
+  .viewing .lead{ margin-inline:auto; text-align:center; }
+  .cta-row{ display:flex; flex-wrap:wrap; gap:1rem; justify-content:center; }
+
+  .meta-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));
+    gap:clamp(1rem,3vw,2.5rem);
+    width:100%; max-width:900px; margin-top:clamp(1.5rem,4vh,3rem);
+    border-top:1px solid var(--line); padding-top:clamp(1.5rem,4vh,2.5rem);
+    text-align:left;
+  }
+  .meta-grid dt{ font-size:var(--fs-label); letter-spacing:.2em; text-transform:uppercase; color:var(--accent); }
+  .meta-grid dd{ margin:.45rem 0 0; color:var(--ink-soft); }
+
+  /* Footer */
+  .foot{
+    padding:clamp(2.5rem,6vh,4rem) var(--gutter)
+      calc(env(safe-area-inset-bottom,0px) + clamp(2rem,5vh,3rem));
+    border-top:1px solid var(--line);
+    display:flex; flex-wrap:wrap; gap:1.2rem 2.5rem; justify-content:space-between; align-items:center;
+    color:var(--ink-faint); font-size:.85rem;
+    max-width:1500px; margin-inline:auto;
+  }
+  .foot a{ color:var(--ink-soft); text-decoration:none; }
+  .foot a:hover{ color:var(--accent); }
+
+  /* ===========================================================
+     SCROLL REVEAL
+     =========================================================== */
+  .reveal{ opacity:0; transform:translateY(30px); transition:opacity .9s var(--ease), transform .9s var(--ease); }
+  .reveal.in{ opacity:1; transform:none; }
+
+  /* ===========================================================
+     MOBILE NAV + RESPONSIVE
+     =========================================================== */
+  @media (max-width:820px){
+    .grid-2{ grid-template-columns:1fr; gap:clamp(1.2rem,4vh,2rem); }
+    .aside-num{ font-size:clamp(2rem,10vw,2.8rem); }
+  }
+
+  @media (max-width:720px){
+    .nav-toggle{ display:inline-flex; }
+    .nav-links{
+      position:fixed; inset:0; z-index:55;
+      flex-direction:column; justify-content:center; align-items:flex-start;
+      gap:clamp(1rem,3.5vh,2rem);
+      padding:
+        calc(env(safe-area-inset-top,0px) + 5rem)
+        max(var(--gutter), env(safe-area-inset-left,0px))
+        calc(env(safe-area-inset-bottom,0px) + 2rem);
+      background:rgba(14,13,11,.97);
+      -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px);
+      transform:translateX(100%);
+      transition:transform .5s var(--ease);
+      visibility:hidden;
+    }
+    body.menu-open .nav-links{ transform:none; visibility:visible; }
+    .nav-links a{ font-size:1.5rem; letter-spacing:.06em; }
+    .nav-links a::after{ bottom:.4rem; }
+  }
+
+  /* Short + wide (landscape phone, ~740x360) */
+  @media (max-height:460px) and (orientation:landscape){
+    .scrub-stage{ height:max(460vh, 2900px); }
+    @supports (height:100svh){ .scrub-stage{ height:max(460svh, 2900px); } }
+    :root{ --fs-display:clamp(1.8rem,7vw,3rem); --fs-lead:clamp(1rem,2.6vw,1.2rem); }
+    .hero-overlay{ padding-bottom:calc(env(safe-area-inset-bottom,0px) + 1.1rem); gap:.7rem; }
+    .hero-sub{ max-width:52ch; }
+    .scroll-hint{ display:none; }
+    .nav-links{ justify-content:flex-start; padding-top:4rem; gap:1rem; }
+  }
+
+  /* ===========================================================
+     REDUCED MOTION — no scrub, quiet autoplay loop, show all
+     =========================================================== */
+  @media (prefers-reduced-motion:reduce){
+    html{ scroll-behavior:auto; }
+    .reveal{ opacity:1; transform:none; transition:none; }
+    .scroll-hint .track::after{ animation:none; }
+  }
+  body.reduced .scrub-stage{ height:100vh; }
+  @supports (height:100svh){ body.reduced .scrub-stage{ height:100svh; } }
+  body.reduced .scroll-hint{ display:none; }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#overview">Skip to content</a>
+
+<!-- ================= NAV ================= -->
+<header>
+  <nav class="nav" aria-label="Primary">
+    <a class="brand" href="#top" aria-label="Home — The Residence">
+      <span class="dot" aria-hidden="true"></span> The Residence
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#overview">Residence</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#residence">Spaces</a></li>
+      <li><a href="#view">Location</a></li>
+      <li><a href="#viewing">Contact</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navLinks" aria-label="Open menu">
+      <svg class="ic-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      <svg class="ic-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- ================= SCRUB HERO ================= -->
+  <section class="scrub-stage" id="hero" aria-label="Cinematic property film">
+    <div class="scrub-pin">
+      <video
+        class="scrub-video" id="scrubVideo"
+        muted playsinline webkit-playsinline
+        preload="auto" disablepictureinpicture
+        aria-label="A continuous cinematic journey through the residence: from empty plot and construction to the finished villa, living room, master bedroom and games room.">
+        <source src="scrub.mp4" type="video/mp4" />
+      </video>
+
+      <div class="hero-overlay" id="heroOverlay">
+        <p class="label">A Private Residence</p>
+        <h1 class="hero-title">Where Architecture Meets Living</h1>
+        <p class="hero-sub">A private residence designed around space, light, and extraordinary views.</p>
+        <a class="btn btn-primary" href="#viewing">
+          Schedule a Private Viewing
+          <span class="arrow" aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+
+      <div class="scroll-hint" id="scrollHint" aria-hidden="true">
+        <span>Scroll</span>
+        <span class="track"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTENT ================= -->
+  <div class="content">
+
+    <!-- 1 · OVERVIEW -->
+    <section class="section" id="overview" aria-labelledby="overview-h">
+      <div class="reveal stack-gap">
+        <p class="label" id="overview-h">Property Overview</p>
+        <p class="overview-statement">A residence conceived not as a structure, but as a way of <em>living with light</em>, space and view.</p>
+        <p class="body-copy">From an open plot to a finished architectural work, the home unfolds as a single, continuous gesture — each space leading quietly into the next. Every threshold has been considered; nothing is incidental.</p>
+      </div>
+    </section>
+
+    <!-- 2 · ARCHITECTURE -->
+    <section class="section" id="architecture" aria-labelledby="arch-h">
+      <div class="grid-2 reveal">
+        <div>
+          <p class="aside-num" aria-hidden="true">01</p>
+          <h2 class="aside-head" id="arch-h">Architecture</h2>
+        </div>
+        <div>
+          <p class="lead">A disciplined composition of form, structure and material — where the building and its light are inseparable.</p>
+          <ul class="feature-list">
+            <li><h3>Structural Form</h3><p>Clean, deliberate geometry that lets the architecture speak without ornament.</p></li>
+            <li><h3>Materials</h3><p>A considered, warm-neutral material palette, selected for permanence and restraint.</p></li>
+            <li><h3>Glass Facade</h3><p>Expansive glazing dissolves the line between the interior and the world beyond it.</p></li>
+            <li><h3>Natural Light</h3><p>Daylight is treated as a material — drawn deep into the plan and shaped through the day.</p></li>
+          </ul>
+          <p class="body-copy">Indoor and outdoor are held in a single continuous relationship, so the residence feels open to its surroundings while remaining entirely private.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · THE RESIDENCE -->
+    <section class="section" id="residence" aria-labelledby="res-h">
+      <div class="grid-2 reveal">
+        <div>
+          <p class="aside-num" aria-hidden="true">02</p>
+          <h2 class="aside-head" id="res-h">The Residence</h2>
+        </div>
+        <div class="stack-gap">
+          <p class="lead">Space, openness and privacy in equal measure.</p>
+          <p class="body-copy">The home is organised around generous volumes and uninterrupted sightlines. Rooms flow into one another with an ease that feels effortless, yet each retains its own sense of quiet and seclusion.</p>
+          <p class="body-copy">Light moves through the plan from morning to evening, and the relationship between every area — public and private, open and intimate — has been calibrated for the rhythm of everyday life.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · LIVING -->
+    <section class="section" id="living" aria-labelledby="living-h">
+      <div class="grid-2 reveal">
+        <div>
+          <p class="aside-num" aria-hidden="true">03</p>
+          <h2 class="aside-head" id="living-h">Living</h2>
+        </div>
+        <div>
+          <p class="lead">An open-plan living environment framed by glass and sky.</p>
+          <ul class="feature-list">
+            <li><h3>Open Plan</h3><p>A single, fluid volume for gathering, dining and pause — generous and unhurried.</p></li>
+            <li><h3>Glass Facade</h3><p>Full-height glazing brings the outside in and sets the living space against the horizon.</p></li>
+            <li><h3>Natural Light</h3><p>Soft, directional daylight shifts across the room throughout the day.</p></li>
+            <li><h3>Skyline Views</h3><p>The city and sky become a quiet, ever-present backdrop to daily life.</p></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · PRIVATE RETREAT -->
+    <section class="section" id="retreat" aria-labelledby="retreat-h">
+      <div class="reveal">
+        <p class="pull">
+          <span class="label" style="display:block;margin-bottom:1.2rem">04 — Private Retreat</span>
+          The master bedroom is a space of <em>calm</em> — private, serene and composed around rest.
+        </p>
+        <p class="body-copy" style="margin-inline:auto;text-align:center;max-width:52ch">Withdrawn from the more open areas of the home, the retreat is deliberately quiet: soft light, generous proportion, and an uninterrupted view held in reserve for the end of the day.</p>
+      </div>
+    </section>
+
+    <!-- 6 · ENTERTAINMENT -->
+    <section class="section" id="entertainment" aria-labelledby="ent-h">
+      <div class="grid-2 reveal">
+        <div>
+          <p class="aside-num" aria-hidden="true">05</p>
+          <h2 class="aside-head" id="ent-h">Entertainment</h2>
+        </div>
+        <div class="stack-gap">
+          <p class="lead">A games room designed for gathering and play.</p>
+          <p class="body-copy">The entertainment level extends the character of the home into something more relaxed and social — a dedicated space to host, unwind and enjoy, without compromising the serenity of the residence above.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 · THE VIEW -->
+    <section class="section" id="view" aria-labelledby="view-h">
+      <div class="reveal">
+        <p class="pull">
+          <span class="label" style="display:block;margin-bottom:1.2rem">06 — The View</span>
+          The residence, its architecture and the <em>skyline</em> beyond are composed as one continuous horizon.
+        </p>
+        <p class="body-copy" style="margin-inline:auto;text-align:center;max-width:52ch">Framed by glass at every turn, the surrounding environment is never incidental — it is part of the architecture itself, drawn into every room and held in view.</p>
+      </div>
+    </section>
+
+    <!-- 8 · PRIVATE VIEWING -->
+    <section class="section" id="viewing" aria-labelledby="viewing-h">
+      <div class="viewing reveal">
+        <p class="label">Private Viewing</p>
+        <h2 id="viewing-h">Experience the Residence</h2>
+        <p class="lead">Arrange a private, in-person tour of the home and its architecture.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#" aria-label="Schedule a Private Viewing (placeholder link)">
+            Schedule a Private Viewing
+            <span class="arrow" aria-hidden="true">&rarr;</span>
+          </a>
+          <a class="btn btn-ghost" href="#overview">Explore the Residence</a>
+        </div>
+
+        <!-- Placeholder details — replace with real information. Nothing here is factual. -->
+        <dl class="meta-grid" aria-label="Enquiry details (placeholder)">
+          <div><dt>Enquiries</dt><dd>[ Add contact name ]</dd></div>
+          <div><dt>Email</dt><dd>[ Add email address ]</dd></div>
+          <div><dt>Telephone</dt><dd>[ Add phone number ]</dd></div>
+          <div><dt>Viewings</dt><dd>By private appointment</dd></div>
+        </dl>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="foot content">
+  <span>The Residence — a private architectural presentation.</span>
+  <span>Details are placeholder and to be confirmed. <a href="#viewing">Enquire</a></span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var video    = document.getElementById('scrubVideo');
+  var stage    = document.getElementById('hero');
+  var overlay  = document.getElementById('heroOverlay');
+  var hint     = document.getElementById('scrollHint');
+  var nav      = document.querySelector('.nav');
+
+  /* Start the hero at frame 0 on (re)load */
+  if ('scrollRestoration' in history) { try { history.scrollRestoration = 'manual'; } catch(e){} }
+
+  /* ---------- NAV: shadow on scroll + mobile menu ---------- */
+  var navToggle = document.getElementById('navToggle');
+  var navLinks  = document.getElementById('navLinks');
+
+  function setMenu(open){
+    document.body.classList.toggle('menu-open', open);
+    navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  }
+  navToggle.addEventListener('click', function(){
+    setMenu(!document.body.classList.contains('menu-open'));
+  });
+  navLinks.addEventListener('click', function(e){
+    if (e.target.closest('a')) setMenu(false);
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') setMenu(false);
+  });
+
+  function onScrollNav(){
+    if (window.scrollY > 24) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+  }
+  window.addEventListener('scroll', onScrollNav, { passive:true });
+  onScrollNav();
+
+  /* ---------- SCROLL REVEAL ---------- */
+  var reveals = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window && !prefersReduced){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold:0.15, rootMargin:'0px 0px -8% 0px' });
+    reveals.forEach(function(el){ io.observe(el); });
+  } else {
+    reveals.forEach(function(el){ el.classList.add('in'); });
+  }
+
+  /* ===================================================
+     REDUCED MOTION: no scrub — quiet autoplay loop
+     =================================================== */
+  if (prefersReduced){
+    document.body.classList.add('reduced');
+    video.loop = true;
+    video.autoplay = true;
+    video.setAttribute('autoplay','');
+    video.setAttribute('loop','');
+    var tryPlay = function(){ var p = video.play(); if (p && p.catch) p.catch(function(){}); };
+    if (video.readyState >= 2) tryPlay();
+    else video.addEventListener('loadeddata', tryPlay, { once:true });
+    return; // skip the whole scrub engine
+  }
+
+  /* ===================================================
+     SCROLL-SCRUB ENGINE
+     =================================================== */
+  var duration = 0;
+  var ready    = false;
+  var target   = 0;   // desired time
+  var current  = 0;   // eased actual time
+  var EASE     = 0.12;
+  var lastSet  = -1;
+
+  function enable(){
+    if (ready) return;
+    duration = video.duration || 0;
+    if (!duration || !isFinite(duration)) return;
+    ready = true;
+    try { video.pause(); } catch(e){}
+    try { video.currentTime = 0; } catch(e){}
+  }
+  video.addEventListener('loadedmetadata', enable);
+  video.addEventListener('durationchange', enable); // some browsers report duration late
+  if (video.readyState >= 1) enable();
+
+  /* Resilience: if the film can't load, don't trap the viewer behind a tall
+     black scroll region — collapse the pinned stage so the content below stays
+     reachable. (Only fires on genuine load failure; the normal path is untouched.) */
+  video.addEventListener('error', function(){ document.body.classList.add('reduced'); }, { once:true });
+
+  /* Prime the first frame so it paints before any scrub (iOS/Safari) */
+  function primeFrame(){
+    var p = video.play();
+    if (p && p.then){
+      p.then(function(){ video.pause(); try{ video.currentTime = 0; }catch(e){} })
+       .catch(function(){ /* will paint on first seek anyway */ });
+    }
+  }
+  video.addEventListener('loadeddata', primeFrame, { once:true });
+
+  /* progress 0..1 across the tall spacer */
+  function progress(){
+    var total = stage.offsetHeight - window.innerHeight;
+    if (total <= 0) return 0;
+    var scrolled = -stage.getBoundingClientRect().top;
+    if (scrolled < 0) scrolled = 0;
+    if (scrolled > total) scrolled = total;
+    return scrolled / total;
+  }
+
+  /* Overlay + hint fade as the scrub begins (over first ~55% viewport) */
+  function updateOverlay(){
+    var vh = window.innerHeight || 1;
+    var fade = 1 - (window.scrollY / (vh * 0.55));
+    if (fade < 0) fade = 0; if (fade > 1) fade = 1;
+    overlay.style.opacity = fade;
+    overlay.style.transform = 'translateY(' + ((1 - fade) * -18) + 'px)';
+    overlay.style.pointerEvents = fade < 0.1 ? 'none' : 'auto';
+    if (hint){
+      var h = 1 - (window.scrollY / (vh * 0.3));
+      hint.style.opacity = h < 0 ? 0 : h;
+    }
+  }
+
+  function tick(){
+    if (ready && duration){
+      target = progress() * duration;
+      if (target > duration - 0.06) target = duration - 0.06; // avoid the hard end
+      if (target < 0) target = 0;
+
+      current += (target - current) * EASE;
+      if (Math.abs(target - current) < 0.002) current = target;
+
+      // only seek when it meaningfully changed (all-keyframe => instant)
+      if (Math.abs(current - lastSet) > 0.012){
+        try { video.currentTime = current; lastSet = current; } catch(e){}
+      }
+    }
+    updateOverlay();
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* Recompute on resize/orientation change (sizes are relative, just repaint) */
+  window.addEventListener('resize', updateOverlay, { passive:true });
+  window.addEventListener('orientationchange', function(){ setTimeout(updateOverlay, 120); });
+
+  updateOverlay();
+})();
+</script>
+</body>
+</html>
