@@ -16,30 +16,31 @@ npm run build    # → dist/
 
 | set | path | frames | size | used when |
 |---|---|---|---|---|
-| desktop | `frames/f001–f240.webp` | 240 × 1280×720 | 19 MB | landscape / ≥ 820 px wide |
-| mobile | `frames/m/f001–f240.webp` | 240 × 810×1080 (portrait centre crop) | 12 MB | portrait < 820 px |
-| preview | `frames/lo/` | 24 × 640×360 (every 10th) | 0.4 MB | both — loads first so the hero is never black |
+| desktop | `frames/f001–f460.webp` | 460 × 1920×1080 | 43 MB | landscape / ≥ 820 px wide |
+| mobile | `frames/m/f001–f460.webp` | 460 × 810×1080 (portrait centre crop) | 24 MB | portrait < 820 px |
+| preview | `frames/lo/` | 46 × 640×360 (every 10th) | 1.2 MB | both — loads first so the hero is never black |
 
-Every frame of the 10 s source film is used, and adjacent frames are crossfaded by the fractional scroll position. They load coarse-to-fine, so the film is scrubbable within a second and sharpens as the rest arrives.
+Frames are cut at 10 fps from the 46 s source film and adjacent frames are crossfaded by the fractional scroll position, so motion reads as continuous. They load coarse-to-fine, so the film is scrubbable within a second and sharpens as the rest arrives.
 
 Chapter captions, nav, feature lists, specs and contact details all live in `src/data/content.js`. Specs and contact are placeholders.
 
 ## Regenerating frames
 
-From the source video (`construction-to-villa.mp4`, 1280×720 @ 24 fps, 10 s):
+From the source video (CapCut export, 3840×2160 @ 50 fps, 48 s; the last 2 s are a CapCut outro card, hence `-t 46`):
 
 ```sh
-# desktop — every frame at source resolution
-ffmpeg -i construction-to-villa.mp4 -an -c:v libwebp -quality 82 public/frames/f%03d.webp
+# desktop — 10 fps, 1920 wide
+ffmpeg -t 46 -i source.mov -an -vf "fps=10,scale=1920:-2:flags=lanczos" -c:v libwebp -quality 74 public/frames/f%03d.webp
 
-# mobile — 3:4 centre crop at 810x1080
-ffmpeg -i construction-to-villa.mp4 -an -vf "crop=ih*3/4:ih:(iw-ih*3/4)/2:0,scale=810:1080:flags=lanczos" -c:v libwebp -quality 80 public/frames/m/f%03d.webp
+# mobile — 10 fps, 3:4 centre crop at 810x1080
+ffmpeg -t 46 -i source.mov -an -vf "fps=10,crop=ih*3/4:ih:(iw-ih*3/4)/2:0,scale=810:1080:flags=lanczos" -c:v libwebp -quality 80 public/frames/m/f%03d.webp
 
-# preview — 640 wide; keep only f001, f011, f021 … in public/frames/lo/
-ffmpeg -i construction-to-villa.mp4 -an -vf scale=640:-2 -c:v libwebp -quality 70 /tmp/lo/f%03d.webp
+# preview — every 10th of the 10 fps cut, 640 wide, keeping the desktop numbering (f001, f011, …)
+ffmpeg -t 46 -i source.mov -an -vf "fps=10,scale=640:-2" -c:v libwebp -quality 70 /tmp/lo/f%03d.webp
+# then keep only f001, f011, f021 … in public/frames/lo/
 ```
 
-If the frame count changes, update `SRC_TOTAL` and `pickSet()` in `useScrollFilm.js`, and the chapter `from`/`to` ranges in `content.js`.
+If the frame count or fps changes, update `SRC_TOTAL`, `LO_STEP` and `pickSet()` in `useScrollFilm.js`.
 
 ## Deploy
 

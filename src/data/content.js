@@ -1,10 +1,10 @@
 export const chapters = [
-  { from: 0.02, to: 0.11, num: 'I · Ground',        title: 'The plot, before anything.',                  body: 'Open land on the edge of the city. The pool and basement are the first cuts into the earth.' },
-  { from: 0.13, to: 0.26, num: 'II · Structure',    title: 'Concrete, steel, and the first floor plate.', body: 'The frame goes up over fourteen months. Floor-to-ceiling openings are set into the structure from day one.' },
-  { from: 0.30, to: 0.46, num: 'III · The Villa',   title: 'Finished, lit, and facing the evening.',      body: 'Two storeys of glass and warm stone around a 14-metre pool. The garden is planted to screen every neighbour.' },
-  { from: 0.50, to: 0.64, num: 'IV · Living',       title: 'One continuous room, open to the horizon.',   body: 'Double-height living and dining under a timber soffit, sliding glass the full width of the terrace.' },
-  { from: 0.68, to: 0.86, num: 'V · Master Suite',  title: 'Wake up to the water.',                       body: 'The principal bedroom sits at the end of a stone and oak corridor, opening onto the terrace and the skyline.' },
-  { from: 0.89, to: 1.00, num: 'VI · Private Wing', title: 'The quiet side of the house.',                body: 'Bedrooms and dressing rooms set well apart from the entertaining spaces.' },
+  { from: 0.10, to: 0.21, num: 'I · Ground',       title: 'The plot, before anything.',                    body: 'Open land on the edge of the city. The pool and basement are the first cuts into the earth.' },
+  { from: 0.23, to: 0.36, num: 'II · Structure',   title: 'Concrete, steel, and the first floor plate.',   body: 'The frame goes up over fourteen months. Floor-to-ceiling openings are set into the structure from day one.' },
+  { from: 0.38, to: 0.52, num: 'III · The Villa',  title: 'Finished, lit, and facing the evening.',        body: 'Two storeys of glass and warm stone around a 14-metre pool. The garden is planted to screen every neighbour.' },
+  { from: 0.54, to: 0.70, num: 'IV · Living',      title: 'One continuous room, open to the horizon.',     body: 'Double-height living and dining under a timber soffit, sliding glass the full width of the terrace.' },
+  { from: 0.72, to: 0.86, num: 'V · Private Wing', title: 'The quiet side of the house.',                  body: 'Bedrooms and dressing rooms along a stone corridor, set apart from the entertaining spaces.' },
+  { from: 0.88, to: 1.00, num: 'VI · Games Room',  title: 'Evenings end here.',                            body: 'Billiards, bar and lounge looking back across the pool to the city lights.' },
 ]
 
 export const nav = [
