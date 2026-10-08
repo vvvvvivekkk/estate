@@ -14,7 +14,7 @@ export default function FilmHero() {
   const pct = Math.round(progress * 100)
 
   return (
-    <section className="film" id="hero" ref={stageRef} aria-label="From the first excavation to the finished residence">
+    <section className="film" id="hero" ref={stageRef} aria-label="A walk through the residence">
       <div className="film-pin">
         <canvas id="film" ref={canvasRef} aria-hidden="true" />
 
@@ -24,7 +24,7 @@ export default function FilmHero() {
         >
           <p className="label">A Private Residence</p>
           <h1>Where Architecture Meets Living</h1>
-          <p className="sub">Scroll to watch the house rise from open ground to its finished rooms.</p>
+          <p className="sub">Scroll to walk through the house, from the pool terrace to its private rooms.</p>
           <a className="btn btn-primary" href="#viewing">Schedule a Private Viewing <span aria-hidden="true">→</span></a>
         </div>
 

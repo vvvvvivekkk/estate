@@ -3,22 +3,22 @@ import { useEffect, useRef, useState } from 'react'
 /**
  * Scroll-scrubbed frame film on a <canvas>.
  *
- * Frames are cut at 10 fps from the 46 s source film (460 frames). Two sets, picked once at mount:
- *   desktop : /frames/f001-f460.webp    1920x1080
- *   mobile  : /frames/m/f001-f460.webp   810x1080 portrait centre crop
+ * Every frame of the 10 s source film (1280x720 @ 24 fps, 240 frames). Two sets, picked once at mount:
+ *   desktop : /frames/f001-f240.webp    1280x720 (source resolution)
+ *   mobile  : /frames/m/f001-f240.webp   810x1080 portrait centre crop
  *   preview : /frames/lo/f001,f011,...  640x360, every 10th frame (shared; paints first)
- * Adjacent frames are crossfaded by the fractional scroll position, so 10 fps reads as continuous.
+ * Adjacent frames are crossfaded by the fractional scroll position.
  *
  * Returns refs for the canvas + the tall stage, plus live progress / load state.
  */
-const SRC_TOTAL = 460
+const SRC_TOTAL = 240
 const LO_STEP = 10
 
 function pickSet() {
   const mobile = window.innerWidth < 820 && window.innerHeight > window.innerWidth
   return mobile
-    ? { dir: '/frames/m/', n: 460, step: 1 }
-    : { dir: '/frames/', n: 460, step: 1 }
+    ? { dir: '/frames/m/', n: 240, step: 1 }
+    : { dir: '/frames/', n: 240, step: 1 }
 }
 
 const pad = (i) => String(i + 1).padStart(3, '0')
@@ -54,7 +54,7 @@ export function useScrollFilm({ ease = 0.14, reduced = false } = {}) {
 
     function place(im) {
       const cw = canvas.width, ch = canvas.height
-      const iw = im.naturalWidth || 1920, ih = im.naturalHeight || 1080
+      const iw = im.naturalWidth || 1280, ih = im.naturalHeight || 720
       const s = Math.max(cw / iw, ch / ih)
       const dw = iw * s, dh = ih * s
       return [(cw - dw) / 2, (ch - dh) / 2, dw, dh]

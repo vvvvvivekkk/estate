@@ -26,7 +26,7 @@ export function Overview() {
       <Reveal className="wrap">
         <p className="label" style={{ marginBottom: '1.4rem' }}>Property Overview</p>
         <p className="statement">A residence conceived not as a structure, but as a way of <em>living with light</em>, space and view.</p>
-        <p className="body" style={{ marginTop: '2rem' }}>From an open plot to a finished architectural work, the home unfolds as a single continuous gesture. Each space leads quietly into the next, and every threshold has been considered.</p>
+        <p className="body" style={{ marginTop: '2rem' }}>From the pool terrace to the private wing, the home unfolds as a single continuous gesture. Each space leads quietly into the next, and every threshold has been considered.</p>
       </Reveal>
     </section>
   )
